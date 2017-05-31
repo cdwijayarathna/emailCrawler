@@ -44,7 +44,7 @@ public class Crawler {
 		Date date = new Date();
 		int counter=1;
 //		String startingUrl = "https://github.com/search?l=Java&p=1&q=java&type=Repositories&utf8=%E2%9C%93";
-		String startingUrl = "https://github.com/cdwijayarathna";
+		String startingUrl = "https://github.com/search?l=Java&p=2&q=java&type=Repositories&utf8=%E2%9C%93";
 		String nextUrl=startingUrl;
 		XMLFileWriter writer = new XMLFileWriter(saveLocation);
 		while(nextUrl!=null){
@@ -64,22 +64,19 @@ public class Crawler {
 			}catch(FileNotFoundException e){
 				
 			}
-			System.out.println(String.valueOf(tmp));
-			System.exit(0);
+			//System.out.println(String.valueOf(tmp));
+			//System.exit(0);
 			Document doc = Jsoup.parse(String.valueOf(tmp));
 			doc.setBaseUri(nextUrl);
 			
-			Elements pageLinks=doc.select("ul[class=mw-allpages-chunk]").first().select("li");
-			for (int i = 0; i < pageLinks.size(); i++) {
-				String pageLink="http://si.wikipedia.org" + pageLinks.get(i).select("a").first().attr("href");
-				//System.out.println("aaa           " + pageLink);
-				if(checkDB(pageLink)){
-					continue;
-				}
-				url = new URL(pageLink);
+			Elements h3=doc.select("h3");
+			for (int i = 0; i < h3.size(); i++) {
+				String pageLink = h3.get(i).select("a").attr("href");
+
+				System.out.println("aaa           " + pageLink);
+				url = new URL("https://github.com" + pageLink + "//graphs/contributors");
 				uc = (HttpURLConnection) url.openConnection();
 				uc.connect();
-				line = null;
 				tmp = new StringBuffer();
 				try{
 				BufferedReader in = new BufferedReader(new InputStreamReader(
@@ -88,19 +85,18 @@ public class Crawler {
 					tmp.append(line);
 				}
 				}catch(FileNotFoundException e){
-					
+
 				}
 				Document docPage = Jsoup.parse(String.valueOf(tmp));
-				docPage.setBaseUri(pageLink);
-				writeDB(pageLink);
-				writer.addDocument(docPage+"", pageLink);
-				if(counter%100==0){
-					writer.update(dateFormat.format(date) + "_" + (counter/100 +1));
+				Elements autags=docPage.select("h3");
+				System.out.println(docPage);
+				for (int j = 0; j < autags.size(); j++) {
+					String aupage = autags.get(j).select("a").attr("href");
+					System.out.println("bbb           " + aupage);
 				}
-				counter ++;
-				System.out.println("--------------------------------"+ counter);
+
 			}
-			
+			System.exit(0);
 			Elements navElements=doc.select("div[class=mw-allpages-nav]").first().select("a");
 			nextUrl=null;
 			
