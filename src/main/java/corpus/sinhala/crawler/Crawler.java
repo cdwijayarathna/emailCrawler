@@ -4,11 +4,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
+import org.openqa.selenium.support.ThreadGuard;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -40,76 +43,75 @@ public class Crawler {
 	}
 	
 	public void crawl() throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, XMLStreamException{
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Date date = new Date();
-		int counter=1;
-//		String startingUrl = "https://github.com/search?l=Java&p=1&q=java&type=Repositories&utf8=%E2%9C%93";
-		String startingUrl = "https://github.com/search?l=Java&p=2&q=java&type=Repositories&utf8=%E2%9C%93";
-		String nextUrl=startingUrl;
-		XMLFileWriter writer = new XMLFileWriter(saveLocation);
-		while(nextUrl!=null){
-			URL url = new URL(nextUrl);
-			HttpURLConnection uc = (HttpURLConnection) url.openConnection();
-			uc.setRequestProperty("Authorization", "Basic Y2R3aWpheWFyYXRobmFAZ21haWwuY29tOmNoYW1pbGExIQ==");
-			uc.connect();
 
-			String line = null;
-			StringBuffer tmp = new StringBuffer();
-			try{
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					uc.getInputStream(), "UTF-8"));
-			while ((line = in.readLine()) != null) {
-				tmp.append(line);
-			}
-			}catch(FileNotFoundException e){
-				
-			}
-			//System.out.println(String.valueOf(tmp));
-			//System.exit(0);
-			Document doc = Jsoup.parse(String.valueOf(tmp));
-			doc.setBaseUri(nextUrl);
-			
-			Elements h3=doc.select("h3");
-			for (int i = 0; i < h3.size(); i++) {
-				String pageLink = h3.get(i).select("a").attr("href");
-
-				System.out.println("aaa           " + pageLink);
-				url = new URL("https://github.com" + pageLink + "//graphs/contributors");
-				uc = (HttpURLConnection) url.openConnection();
+		System.setProperty("webdriver.chrome.driver", "C:\\DDDDDDDDDDDDDDDDDDDDDDDDDD\\myphdstuff\\paper1\\crawler\\chromedriver_win32\\chromedriver.exe");
+		WebDriver driver=new ChromeDriver();
+		driver.get("https://github.com/login");
+		WebElement login = driver.findElement(By.name("login"));
+		login.sendKeys("cdwijayarathna");
+		WebElement pass = driver.findElement(By.name("password"));
+		pass.sendKeys("xx!");
+		WebElement loginbutton = driver.findElement(By.name("commit"));
+		loginbutton.click();
+		int count = 0;
+		for (int k=21; k<101; k++) {
+			String startingUrl = "https://github.com/search?l=Java&o=desc&p=" + k + "&q=java&s=forks&type=Repositories";
+			String nextUrl = startingUrl;
+			XMLFileWriter writer = new XMLFileWriter(saveLocation);
+				URL url = new URL(nextUrl);
+				HttpURLConnection uc = (HttpURLConnection) url.openConnection();
+				uc.setRequestProperty("Authorization", "Basic xx");
 				uc.connect();
-				tmp = new StringBuffer();
-				try{
-				BufferedReader in = new BufferedReader(new InputStreamReader(
-						uc.getInputStream(), "UTF-8"));
-				while ((line = in.readLine()) != null) {
-					tmp.append(line);
-				}
-				}catch(FileNotFoundException e){
+
+				String line = null;
+				StringBuffer tmp = new StringBuffer();
+				try {
+					BufferedReader in = new BufferedReader(new InputStreamReader(
+							uc.getInputStream(), "UTF-8"));
+					while ((line = in.readLine()) != null) {
+						tmp.append(line);
+					}
+				} catch (FileNotFoundException e) {
 
 				}
-				Document docPage = Jsoup.parse(String.valueOf(tmp));
-				Elements autags=docPage.select("h3");
-				System.out.println(docPage);
-				for (int j = 0; j < autags.size(); j++) {
-					String aupage = autags.get(j).select("a").attr("href");
-					System.out.println("bbb           " + aupage);
-				}
+				//System.out.println(String.valueOf(tmp));
+				//System.exit(0);
+				Document doc = Jsoup.parse(String.valueOf(tmp));
+				doc.setBaseUri(nextUrl);
+
+				Elements h3 = doc.select("h3");
+				for (int i = 1; i < h3.size(); i++) {
+					String pageLink = h3.get(i).select("a").attr("href");
+
+					System.out.println("aaa           " + pageLink);
+					//url = new URL("https://github.com" + pageLink + "//graphs/contributors");
+					driver.get("https://github.com" + pageLink + "//graphs/contributors");
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					Document docPage = Jsoup.parse(String.valueOf(driver.getPageSource()));
+					Elements autags = docPage.select("h3");
+					for (int j = 1; j < autags.size(); j++) {
+						String aupage = autags.get(j).select("a").attr("href");
+						driver.get("https://github.com" + aupage);
+						Document auDoc = Jsoup.parse(String.valueOf(driver.getPageSource()));
+						Elements emailTag = auDoc.select("li[itemprop=email]");
+						if (emailTag.size() > 0) {
+							String email = emailTag.get(0).select("a").text();
+							String name = auDoc.select("span[itemprop=name]").text();
+							System.out.println(name + " : " + email);
+							writer.addDocument(name, email, "https://github.com" + aupage);
+							count ++;
+						}
+					}
 
 			}
-			System.exit(0);
-			Elements navElements=doc.select("div[class=mw-allpages-nav]").first().select("a");
-			nextUrl=null;
-			
-			for (int i = 0; i < navElements.size(); i++) {
-				Element element=navElements.get(i);
-				if(element.text().startsWith("මීළඟ පිටුව")){
-					nextUrl="http://si.wikipedia.org"+ element.attr("href");
-				}
-			}
-			
-			
+			writer.update(k);
+			System.out.println("Count after page " + k + " : " + count);
 		}
-		
 		
 	}
 	

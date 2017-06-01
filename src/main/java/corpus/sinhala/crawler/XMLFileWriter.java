@@ -26,37 +26,12 @@ public class XMLFileWriter {
 	private OMFactory factory;
 	private OMElement root;
 	private QName rootName;
-	private QName linkName;
-	private QName topicName;
-	private QName authorName;
-	private QName contentName;
-	private QName postName;
-	private QName dateName;
-	private QName yearName;
-	private QName monthName;
-	private QName dayName;
-	private QName categoryName;
 
 	ArrayList<OMElement> docs;
 	
 	Constructor<?> cons;	
 
 	public XMLFileWriter(String location) throws IOException {
-		String temp[] = location.split("/");
-		String createDir = "";
-		if(!location.startsWith("/")){
-			createDir += temp[0];
-			File dir = new File(createDir);
-			dir.mkdir();
-		}
-		
-		for(int i=1; i<temp.length; i++){
-			createDir += "/"+temp[i];
-			File dir = new File(createDir);
-			dir.mkdir();
-		}
-		filePath = createDir;
-		
 		init();
 		//createFolder();
 		factory = OMAbstractFactory.getOMFactory();
@@ -65,16 +40,6 @@ public class XMLFileWriter {
 
 	private void init() {
 		rootName = new QName("root");
-		linkName = new QName("link");
-		topicName = new QName("topic");
-		authorName = new QName("author");
-		contentName = new QName("content");
-		postName = new QName("post");
-		dateName = new QName("date");
-		yearName = new QName("year");
-		monthName = new QName("month");
-		dayName = new QName("day");
-		categoryName = new QName("category");
 
 		docs = new ArrayList<>();
 		
@@ -82,60 +47,28 @@ public class XMLFileWriter {
 
 	
 
-	public void addDocument(String page, String url) throws IOException,
+	public void addDocument(String name, String email, String url) throws IOException,
 			XMLStreamException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		
-		System.out.println(url);
-		WikipediaParser parser = new WikipediaParser(page, url);
-		OMElement doc = factory.createOMElement(postName);
+
+		OMElement doc = factory.createOMElement(new QName("user"));
 		
-		OMElement category = factory.createOMElement(categoryName);
-		category.setText("ACADEMIC");
-		doc.addChild(category);
-
-		OMElement date = factory.createOMElement(dateName);
-		OMElement year = factory.createOMElement(yearName);
-		year.setText(parser.getYear());
-		date.addChild(year);
-
-		OMElement month = factory.createOMElement(monthName);
-		month.setText("");
-		date.addChild(month);
-
-		OMElement day = factory.createOMElement(dayName);
-		day.setText("");
-		date.addChild(day);
-
-		doc.addChild(date);
-
-		OMElement link = factory.createOMElement(linkName);
-		link.setText(parser.getUrl());
-		doc.addChild(link);
-
-		OMElement topic = factory.createOMElement(topicName);
-		topic.setText(parser.getTitle());
-		doc.addChild(topic);
-
-		OMElement author = factory.createOMElement(authorName);
-		try {
-			author.setText("");
-		} catch (Exception e) {
-			author.setText("");
-		}
-
-		doc.addChild(author);
-
-		OMElement content = factory.createOMElement(contentName);
-		content.setText(parser.getContent());
-		doc.addChild(content);
-		
+		OMElement profile = factory.createOMElement(new QName("profile"));
+		OMElement nameEl = factory.createOMElement(new QName("name"));
+		OMElement emailEl = factory.createOMElement(new QName("email"));
+		profile.setText(url);
+		nameEl.setText(name);
+		emailEl.setText(email);
+		doc.addChild(profile);
+		doc.addChild(nameEl);
+		doc.addChild(emailEl);
 		docs.add(doc);
 	}
 
 	
 	public void writeToFile(String fileName) throws IOException, XMLStreamException {
-		path = filePath + "/" + fileName + ".xml";
-		System.out.println("---------------------------" + path);
+		path = fileName;
+		//System.out.println("---------------------------" + path);
 		OutputStream out = new FileOutputStream(path);
 		XMLStreamWriter writer = StAXUtils.createXMLStreamWriter(out);
 		writer = new IndentingXMLStreamWriter(writer);
@@ -143,7 +76,7 @@ public class XMLFileWriter {
 		writer.flush();
 	}
 
-	public void update(String message) {
+	public void update(int k) {
 		
 		for (int i = 0; i < docs.size(); i++) {
 
@@ -151,8 +84,11 @@ public class XMLFileWriter {
 		}
 
 		try {
-			writeToFile(message);
+			writeToFile("C:\\DDDDDDDDDDDDDDDDDDDDDDDDDD\\myphdstuff\\paper1\\crawler\\" + k + ".xml");
+			System.out.println("Writing to " + k + " complete");
+
 		} catch (IOException | XMLStreamException e) {
+			e.printStackTrace();
 		}
 		root = factory.createOMElement(rootName);
 		
