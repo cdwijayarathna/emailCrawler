@@ -19,9 +19,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import javax.xml.stream.XMLStreamException;
 
 public class Crawler {
@@ -50,17 +47,16 @@ public class Crawler {
 		WebElement login = driver.findElement(By.name("login"));
 		login.sendKeys("cdwijayarathna");
 		WebElement pass = driver.findElement(By.name("password"));
-		pass.sendKeys("xx!");
+		pass.sendKeys("zxxx");
 		WebElement loginbutton = driver.findElement(By.name("commit"));
 		loginbutton.click();
 		int count = 0;
-		for (int k=21; k<101; k++) {
+		for (int k=94; k<101; k++) {
 			String startingUrl = "https://github.com/search?l=Java&o=desc&p=" + k + "&q=java&s=forks&type=Repositories";
 			String nextUrl = startingUrl;
 			XMLFileWriter writer = new XMLFileWriter(saveLocation);
 				URL url = new URL(nextUrl);
 				HttpURLConnection uc = (HttpURLConnection) url.openConnection();
-				uc.setRequestProperty("Authorization", "Basic xx");
 				uc.connect();
 
 				String line = null;
@@ -80,20 +76,25 @@ public class Crawler {
 				doc.setBaseUri(nextUrl);
 
 				Elements h3 = doc.select("h3");
+			Document docPage;
+			Elements autags;
 				for (int i = 1; i < h3.size(); i++) {
 					String pageLink = h3.get(i).select("a").attr("href");
-
 					System.out.println("aaa           " + pageLink);
 					//url = new URL("https://github.com" + pageLink + "//graphs/contributors");
-					driver.get("https://github.com" + pageLink + "//graphs/contributors");
-					try {
-						Thread.sleep(5000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					do {
+						driver.get("https://github.com" + pageLink + "//graphs/contributors");
+						try {
+							Thread.sleep(5000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						//System.out.println(String.valueOf(driver.getPageSource()));
+						docPage = Jsoup.parse(String.valueOf(driver.getPageSource()));
+						autags = docPage.select("h3");
+					}while (autags.size()<=1);
 
-					Document docPage = Jsoup.parse(String.valueOf(driver.getPageSource()));
-					Elements autags = docPage.select("h3");
+
 					for (int j = 1; j < autags.size(); j++) {
 						String aupage = autags.get(j).select("a").attr("href");
 						driver.get("https://github.com" + aupage);
