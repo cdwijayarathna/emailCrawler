@@ -84,7 +84,7 @@ public class XMLFileWriter {
 		}
 
 		try {
-			writeToFile("C:\\DDDDDDDDDDDDDDDDDDDDDDDDDD\\myphdstuff\\paper1\\crawler\\" + k + ".xml");
+			writeToFile("C:\\DDDDDDDDDDDDDDDDDDDDDDDDDD\\myphdstuff\\paper1\\crawler\\" + k + "-3.xml");
 			System.out.println("Writing to " + k + " complete");
 
 		} catch (IOException | XMLStreamException e) {
